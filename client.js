@@ -1,4 +1,5 @@
 let gameState = [];
+let bullets = [];
 let ws;
 
 function connect() {
@@ -16,6 +17,7 @@ function connect() {
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         gameState = data.state;
+        bullets = data.bullets ?? [];
     };
 }
 connect();
@@ -30,6 +32,7 @@ const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 640;
 const PLAYER_WIDTH = 45;
 const PLAYER_HEIGHT = 30;
+const BULLET_RADIUS = 5;
 
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('canvas');
@@ -53,6 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
     };
 
+    const drawBullet = (bullet) => {
+        ctx.fillStyle = 'yellow';
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, BULLET_RADIUS, 0, 2 * Math.PI);
+        ctx.fill();
+    };
+
     const loop = () => {
         ctx.fillStyle = 'blue';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -63,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         gameState.forEach((player) => {
             drawPlayer(player.x, player.y, player.angle);
+        });
+
+        bullets.forEach((bullet) => {
+            drawBullet(bullet);
         });
 
         requestAnimationFrame(loop);
@@ -81,7 +95,11 @@ window.addEventListener('keydown', (event) => {
 
 window.addEventListener('keyup', (event) => {
     // keys.delete(event.key);
-    ws.send(JSON.stringify({ type: 'keyup', key: event.key }));
+    if (event.code === 'Space') {
+        ws.send(JSON.stringify({ type: 'fire' }));
+    } else {
+        ws.send(JSON.stringify({ type: 'keyup', key: event.key }));
+    }
 });
 
 function updatePosition() {

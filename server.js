@@ -17,10 +17,22 @@ server.on('connection', (socket) => {
 
     socket.on('message', (message) => {
         try {
+            // Movement keys
             const data = JSON.parse(message);
             if (data.type === 'keydown') players.get(socket).keys.add(data.key);
             if (data.type === 'keyup')
                 players.get(socket).keys.delete(data.key);
+
+            // Bullet fire key
+            if (data.type === 'fire') {
+                const player = players.get(socket);
+                bullets.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(player.angle) * BULLET_SPEED,
+                    vy: Math.sin(player.angle) * BULLET_SPEED,
+                });
+            }
         } catch (error) {
             console.error(error);
             return;
@@ -53,10 +65,13 @@ console.log('WebSocket server is running on ws://localhost:8081');
 const TICK_RATE = 60;
 const PLAYER_SPEED = 8;
 const TURN_SPEED = 0.1;
+const BULLET_SPEED = 15;
 const CANVAS_HEIGHT = 640;
 const CANVAS_WIDTH = 640;
 const PLAYER_WIDTH = 45;
 const PLAYER_HEIGHT = 30;
+
+let bullets = [];
 
 setInterval(() => {
     let dirty = false;
@@ -97,6 +112,23 @@ setInterval(() => {
             dirty = true;
     });
 
+    // Move bullets
+    bullets.forEach((b) => {
+        b.x += b.vx;
+        b.y += b.vy;
+    });
+
+    // Remove bullets that left the canvas
+    const alive = bullets.filter(
+        (b) =>
+            b.x >= 0 && b.x <= CANVAS_WIDTH && b.y >= 0 && b.y <= CANVAS_HEIGHT,
+    );
+    bullets = alive;
+
+    if (bullets.length > 0) {
+        dirty = true;
+    }
+
     if (dirty === true) {
         // Convert Map to Object and remove keys Set to allow for serialization
         const state = [...players.values()].map(({ id, x, y, angle }) => ({
@@ -105,7 +137,13 @@ setInterval(() => {
             y,
             angle,
         }));
-        const message = JSON.stringify({ type: 'state', state });
+        const bulletState = bullets.map(({ x, y }) => ({ x, y }));
+
+        const message = JSON.stringify({
+            type: 'state',
+            state,
+            bullets: bulletState,
+        });
 
         players.forEach((player, socket) => {
             if (socket.readyState === WebSocket.OPEN) {
