@@ -28,8 +28,8 @@ document.getElementById('send').addEventListener('click', () => {
 
 const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 640;
-const PLAYER_WIDTH = 25;
-const PLAYER_HEIGHT = 75;
+const PLAYER_WIDTH = 45;
+const PLAYER_HEIGHT = 30;
 
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('canvas');
@@ -39,14 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!ctx) return;
 
-    const drawPlayer = (x, y) => {
+    const drawPlayer = (x, y, angle) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
         ctx.fillStyle = 'salmon';
         ctx.fillRect(
-            x - PLAYER_WIDTH / 2,
-            y - PLAYER_HEIGHT / 2,
+            -PLAYER_WIDTH / 2,
+            -PLAYER_HEIGHT / 2,
             PLAYER_WIDTH,
             PLAYER_HEIGHT,
         );
+        ctx.restore();
     };
 
     const loop = () => {
@@ -58,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         gameState.forEach((player) => {
-            drawPlayer(player.x, player.y);
+            drawPlayer(player.x, player.y, player.angle);
         });
 
         requestAnimationFrame(loop);
