@@ -51,12 +51,12 @@ server.on('connection', (socket) => {
 console.log('WebSocket server is running on ws://localhost:8081');
 
 const TICK_RATE = 60;
-const PLAYER_SPEED = 10;
+const PLAYER_SPEED = 8;
 const TURN_SPEED = 0.1;
 const CANVAS_HEIGHT = 640;
 const CANVAS_WIDTH = 640;
 const PLAYER_WIDTH = 45;
-const PLAYER_HEIGHT = 15;
+const PLAYER_HEIGHT = 30;
 
 setInterval(() => {
     let dirty = false;
